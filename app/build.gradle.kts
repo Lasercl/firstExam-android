@@ -54,6 +54,9 @@ dependencies {
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.room.runtime.android)
+//    implementation(libs.androidx.datastore.core.android)
+    implementation(libs.androidx.datastore.preferences)
+
     ksp(libs.androidx.room.compiler)
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.2")
     testImplementation(libs.junit)
