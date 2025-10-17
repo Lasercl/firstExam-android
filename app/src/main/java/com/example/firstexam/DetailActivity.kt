@@ -17,7 +17,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.text.HtmlCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
+import com.example.firstexam.database.FavoriteEvent
 import com.example.firstexam.databinding.ActivityDetailBinding
 import com.example.firstexam.databinding.ItemRowHeroBinding
 import com.example.firstexam.response.ListEventsItem
@@ -25,14 +27,20 @@ import retrofit2.http.Tag
 import java.util.Objects
 
 class DetailActivity : AppCompatActivity() {
+    private var isFavorite = false
+    private var menuItem: MenuItem? = null
    private var _binding :ActivityDetailBinding?=null
+    private var favoriteEvent:FavoriteEvent?=null
     private val binding get() = _binding!!
-
+    private lateinit var detailViewModel: DetailViewModel
+    private lateinit var eventItem:ListEventsItem
     companion object{
         val DETAIL_ITEM="detail_item"
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        detailViewModel=obtainViewModel(this@DetailActivity)
+
         _binding = ActivityDetailBinding.inflate(layoutInflater)
 
         setContentView(binding.root)
@@ -49,6 +57,7 @@ class DetailActivity : AppCompatActivity() {
             intent.getParcelableExtra<ListEventsItem>(DETAIL_ITEM)
         }
         if (data != null) {
+            eventItem=data
             Glide.with(binding.root.context)
                 .load("${data.mediaCover}")
                 .into(binding.imageDetail)
@@ -88,10 +97,24 @@ class DetailActivity : AppCompatActivity() {
         }
 
     }
+
+    private fun obtainViewModel(activity: AppCompatActivity): DetailViewModel {
+        val factory = ViewModelFactory.getInstance(activity.application)
+        return ViewModelProvider(activity, factory).get(DetailViewModel::class.java)
+    }
+
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
 
         menuInflater.inflate(R.menu.detail_menu, menu)
-        
+        menuItem = menu?.findItem(R.id.action_save)
+
+        // Cek status favorite dari DB
+        detailViewModel.isFavorite(eventItem.id!!).observe(this) { favorite ->
+            isFavorite = favorite
+            updateFavoriteIcon()
+        }
+
+
         return true
     }
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -99,8 +122,31 @@ class DetailActivity : AppCompatActivity() {
             finish()
             return true
         }else if (item.itemId == R.id.action_save) {
-            Toast.makeText(this, "Berhasil disimpan", Toast.LENGTH_SHORT).show()
+            if (isFavorite) {
+                // Sudah favorit → hapus
+                detailViewModel.deleteById(eventItem.id!!)
+
+            } else {
+                // Belum favorit → tambahkan
+                favoriteEvent= FavoriteEvent()
+                favoriteEvent?.id=eventItem.id!!
+                favoriteEvent?.name=eventItem.name!!
+                favoriteEvent?.mediaCover=eventItem.mediaCover!!
+                detailViewModel.insert(favoriteEvent!!)
+
+            }
+            updateFavoriteIcon()
+            return true
+
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    private fun updateFavoriteIcon() {
+        menuItem?.icon = if (isFavorite) {
+            ContextCompat.getDrawable(this, R.drawable.ic_star_full)
+        } else {
+            ContextCompat.getDrawable(this, R.drawable.ic_star)
+        }
     }
 }

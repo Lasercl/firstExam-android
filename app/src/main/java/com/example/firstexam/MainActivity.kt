@@ -3,11 +3,13 @@ package com.example.firstexam
 import android.os.Bundle
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.example.firstexam.databinding.ActivityMainBinding
+import com.example.firstexam.ui.event.ListEventViewModel
 
 class MainActivity : AppCompatActivity() {
 
